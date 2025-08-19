@@ -1,7 +1,12 @@
 #ifdef _WIN32
 #include <conio.h>
-#include <stdlib.h>
+#include <stdio.h>
+#include <windows.h>
 //literally just a conio.h wrapper
+
+void sleep(int ms) {
+    Sleep(ms);
+}
 
 void clear_screen() { //linux one also works
     system("cls"); //however it causes flickering on my device so this seems to work better
@@ -19,6 +24,10 @@ int getch_c() { return _getch(); }
 #include <unistd.h>
 #include <termios.h>
 #include <sys/select.h>
+
+void sleep(int ms) {
+    usleep(ms * 1000);
+}
 
 void clear_screen() {
     printf("\033[2J\033[H");

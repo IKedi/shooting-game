@@ -8,6 +8,9 @@
 #include "game.h"
 #include "logs.h" 
 
+#define WINDOW_TITLE "Game"
+#define UNCAPPED_LOOP 0 //runs keycheck without any delays. not recommended.
+
 int running = 1;
 time_t start_time;
 time_t game_start_time;
@@ -119,6 +122,8 @@ int main() {
 		return 1;
 	}
 
+	printf("\033]0;%s\007", WINDOW_TITLE);
+
 	for (int i = 0; i < MAP_SIZE; i++) {
 		mapbufferedge[i] = '-';
 		mapbuffermid[i] = i < PLAYER_AREA ? ' ' : '-';
@@ -144,6 +149,13 @@ int main() {
 			current_tick = now;
 			game_on_tick();
 			render();
+		}
+
+		if (!UNCAPPED_LOOP) {
+			//actually significant, game goes from 5%
+			//(10-15% total if you count console)
+			//to around 5% total, mostly under 1% cpu usage. 
+			sleep(16); //helps lower cpu usage without much notice
 		}
 	}
 
