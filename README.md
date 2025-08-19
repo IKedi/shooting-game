@@ -1,0 +1,1 @@
+Just a project so i can get used to C environment as a C# user, expect lots of unsafe code and bad practice if you decide to "play" this "game"
