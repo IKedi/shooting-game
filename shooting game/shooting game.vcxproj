@@ -125,13 +125,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="game.c" />
+    <ClCompile Include="gamescene.c" />
     <ClCompile Include="logs.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="mainmenu.c" />
+    <ClCompile Include="scenemanager.c" />
     <ClCompile Include="window.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h" />
+    <ClInclude Include="gamescene.h" />
     <ClInclude Include="logs.h" />
+    <ClInclude Include="mainmenu.h" />
+    <ClInclude Include="scenemanager.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -4,15 +4,32 @@
 #include <windows.h>
 //literally just a conio.h wrapper
 
-void sleep(int ms) {
+void sleep_ms(int ms) {
     Sleep(ms);
 }
 
-void clear_screen() { //linux one also works
-    system("cls"); //however it causes flickering on my device so this seems to work better
+void set_window_title(const char* title) {
+    SetConsoleTitleA(title);
 }
 
-void init_keyboard() {} //lulz
+void clear_screen() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD coordScreen = { 0, 0 };
+    DWORD cCharsWritten;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD dwConSize;
+
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+
+    FillConsoleOutputCharacter(hConsole, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten);
+    FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten);
+    SetConsoleCursorPosition(hConsole, coordScreen);
+}
+
+void init_keyboard() {}
+void reset_keyboard() {}
+
 int kbhit_c() { return _kbhit(); }
 int getch_c() { return _getch(); }
 
@@ -25,20 +42,31 @@ int getch_c() { return _getch(); }
 #include <termios.h>
 #include <sys/select.h>
 
-void sleep(int ms) {
+void sleep_ms(int ms) {
     usleep(ms * 1000);
+}
+
+void set_window_title(const char* title) {
+    printf("\033]0;%s\007", title);
+    fflush(stdout);
 }
 
 void clear_screen() {
     printf("\033[2J\033[H");
     fflush(stdout);
 }
+static struct termios old_t; //keeping it here so its apparent what its used for.
 
 void init_keyboard() {
     struct termios t;
-    tcgetattr(STDIN_FILENO, &t);
+    tcgetattr(STDIN_FILENO, &old_t);
+    t = old_t;
     t.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
+}
+
+void reset_keyboard() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_t);
 }
 
 int kbhit_c() {
