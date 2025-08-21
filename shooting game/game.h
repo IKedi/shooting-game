@@ -19,7 +19,20 @@ struct Enemy {
 	char designation;
 };
 
-struct Player { int health, score, kills; };
+struct Player {
+	int health, max_health, damage,
+
+		damage_level, health_level,
+
+		score, total_score, kills;
+};
+
+enum PlayerUpgrades
+{
+	Heal = 0,
+	Health = 1,
+	Damage = 2,
+};
 
 extern struct Player* player;
 extern struct Enemy** enemies;
@@ -28,7 +41,10 @@ extern int next_enemy_type; //probably one of the worst ways to implement this, 
 
 struct Player* create_player();
 void destroy_player();
-void hurt_player();
+void hurt_player(int damage);
+
+void buy_upgrade(enum PlayerUpgrades upgrade);
+int get_upgrade_cost(enum PlayerUpgrades upgrade);
 
 struct Enemy* create_enemy(int row);
 void hurt_enemy(struct Enemy* enemy);

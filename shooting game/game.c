@@ -75,7 +75,16 @@ struct Player* create_player() {
 	if (!player) return NULL;
 
 	player->health = PLAYER_HEALTH;
+	player->max_health = PLAYER_HEALTH;
+	player->damage = PLAYER_DAMAGE;
+
+	//just recalculate player damage and max health based on levels every upgrade
+	//way better than calculating every damage dealt.
+	player->damage_level = 1;
+	player->health_level = 1;
+
 	player->score = 0;
+	player->total_score = 0;
 	player->kills = 0;
 	return player;
 }
@@ -138,12 +147,60 @@ void hurt_enemy(struct Enemy* enemy) {
 	create_log("You hit an enemy for %d damage", PLAYER_DAMAGE);
 }
 
+void buy_upgrade(enum PlayerUpgrades upgrade) {
+	if (!player) return;
+	int cost = get_upgrade_cost(upgrade);
+
+	if (cost == -1) return;
+	if (player->score < cost) {
+		create_log("You need %d score to purchase this!", cost);
+		return;
+	}
+	player->score -= cost;
+
+	const char* upgrade_name = "";
+	switch (upgrade) {
+	case Heal:
+		player->health = player->max_health;
+		upgrade_name = "heal";
+		break;
+	case Health:
+		player->health_level += 1;
+		upgrade_name = "health upgrade";
+		break;
+	case Damage:
+		player->damage_level += 1;
+		upgrade_name = "damage upgrade";
+		break;
+	}
+
+	create_log("You purchase %s for %d!", upgrade_name, cost);
+	player->damage = PLAYER_DAMAGE * player->damage_level;
+	player->max_health = PLAYER_HEALTH * player->health_level;
+}
+int get_upgrade_cost(enum PlayerUpgrades upgrade) 
+{
+	if (player) {
+		switch (upgrade) {
+		case Heal: //based on how much health player has lost.
+			return (player->max_health - player->health) * 10; break;
+		case Health:
+			return player->health_level * 100; break;
+		case Damage:
+			return player->damage_level * 150; break;
+		}
+	}
+	
+	return -1;
+}
+
 void obliterate_enemy(struct Enemy* enemy) {
 	if (enemy == NULL) return;
 
 	if (player) {
 		player->kills += 1;
 		player->score += enemy->score;
+		player->total_score += enemy->score;
 
 		create_log("You finish off an enemy for %d points!", enemy->score);
 	}

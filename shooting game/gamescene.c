@@ -24,7 +24,20 @@ static char row_buffers[ROW_AMOUNT][MAP_SIZE + 1];
 int dead = 0;
 int opentab = 0;
 
+int health_upgrade_cost = 999;
+int damage_upgrade_cost = 999;
+int heal_upgrade_cost = 0;
+int old_health = PLAYER_HEALTH;
+
+int game_paused = 0;
+int buying_upgrade = 0;
+
 #define SELTAB(i) (opentab == i ? ">" : "")
+
+void update_upgrade_costs() { //heal cost updates every damage.
+	health_upgrade_cost = get_upgrade_cost(Health);
+	damage_upgrade_cost = get_upgrade_cost(Damage);
+}
 
 void update_rows() {
 	for (int i = 0; i < ROW_AMOUNT; i++) {
@@ -62,13 +75,16 @@ void game_render() {
 	}
 	time_t now = time(NULL);
 
-	if (now != current_tick) { //debounce for when render gets called early(eg when shooting)
+	if (now != current_tick && !game_paused) { //debounce for when render gets called early(eg when shooting)
 		current_tick = now;
 		game_on_tick(); //could cause delayed frames on old pc
 	}
 	clear_screen(); //if screen cleared before calculating stuff
 
-	printf("Health: %d Score: %d Kills: %d\n", player->health, player->score, player->kills);
+	printf("Health: %d/%d Score: %d Kills: %d%s%s\n",
+		player->health, player->max_health, player->score, player->kills,
+		(buying_upgrade ? " BUYING MODE" : ""),
+		(game_paused ? " PAUSED" : ""));
 
 	update_rows();
 	for (int i = 0; i < ROW_AMOUNT; i++) {
@@ -76,7 +92,7 @@ void game_render() {
 	}
 	printf("%s\n\n", mapbufferedge);
 
-	printf("%s[l]ogs %s[u]pgrades [n]ew game [c]lose game\n%s\n", SELTAB(0), SELTAB(1), mapbufferedge);
+	printf("%s[l]ogs %s[u]pgrades [p]ause [n]ew game [c]lose game\n%s\n", SELTAB(0), SELTAB(1), mapbufferedge);
 	if (opentab == 0) {
 		char* logs = get_log_buffer();
 
@@ -84,7 +100,15 @@ void game_render() {
 		free(logs);
 	}
 	else if (opentab == 1) {
-		printf("No upgrades yet.\n");
+		if (old_health != player->health) {
+			heal_upgrade_cost = get_upgrade_cost(Heal);
+		}
+
+		printf("PRESS 'B' TO TOGGLE BUYING MODE\n1: Heal (%d)\n2: Health lvl%d (%d)\n3: Damage lvl%d (%d)\n",
+			heal_upgrade_cost,
+			player->health_level, health_upgrade_cost,
+			player->damage_level, damage_upgrade_cost
+		);
 	}
 }
 int game_update() {
@@ -105,15 +129,26 @@ int game_update() {
 			INITIALIZE();
 			break;
 		}
-		case 'b': player->health = 0; break; //death
+		case 'p': game_paused = !game_paused; RENDER(); break; //pause game
+		case 'b': buying_upgrade = !buying_upgrade; RENDER(); break; //toggle buy upgrade
 		case 'l': opentab = 0; RENDER(); break; //logs tab
 		case 'u': opentab = 1; RENDER(); break; //upgrades tab
 
-		case '0': shoot(9); break; //because 1 is 0 and so on
 		default: {
 			int n = input - '1';
-			if (n > ROW_AMOUNT - 1) break;
+			if (n > ROW_AMOUNT - 1) break; //is number basically
+			if (n == -1) n = 9;
+			printf("%d", n);
 
+			if (buying_upgrade) {
+				buy_upgrade(n);
+				update_upgrade_costs();
+				buying_upgrade = 0;
+				RENDER();
+				return;
+			}
+
+			if (game_paused) return;
 			shoot(n);
 			break;
 		}
@@ -141,6 +176,7 @@ int game_initialize() {
 	current_tick = game_start_time; //avoid calculating multiple times
 
 	dead = 0;
+	update_upgrade_costs();
 
 	return 1;
 }
