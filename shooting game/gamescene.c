@@ -136,7 +136,7 @@ int game_update() {
 		case 'u': opentab = 1; RENDER(); break; //upgrades tab
 		default: {
 			int n = input - '1';
-			if (n > 8) return; //is number basically (9 is -1 (8))
+			if (n > 8) return 1; //is number basically (9 is -1 (8))
 			if (n == -1) n = 9; // 0 key = 10 (-1)
 
 			if (buying_upgrade) {
@@ -144,10 +144,10 @@ int game_update() {
 				update_upgrade_costs();
 				buying_upgrade = 0;
 				RENDER();
-				return;
+				return 1;
 			}
 
-			if (game_paused) return;
+			if (game_paused) return 1;
 			shoot(n);
 			break;
 		}

@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAX_LOGS 10
-char** logs;
+extern char** logs;
 
 void create_log(const char* message, ...);
 void clear_logs();
