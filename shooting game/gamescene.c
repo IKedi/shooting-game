@@ -35,6 +35,7 @@ int buying_upgrade = 0;
 #define SELTAB(i) (opentab == i ? ">" : "")
 
 void update_upgrade_costs() { //heal cost updates every damage.
+	heal_upgrade_cost = get_upgrade_cost(Heal); //so it updates when you buy max health upgrade
 	health_upgrade_cost = get_upgrade_cost(Health);
 	damage_upgrade_cost = get_upgrade_cost(Damage);
 }
@@ -70,7 +71,7 @@ void game_render() {
 	if (dead) {
 		clear_screen(); //read below for explanation
 		printf("You died!\nScore: %d  Kills: %d  Time: %d\n\n\nPress 'n' to start new game",
-			player->score, player->kills, (int)(game_end_time - game_start_time));
+			player->total_score, player->kills, (int)(game_end_time - game_start_time));
 		return;
 	}
 	time_t now = time(NULL);
@@ -133,12 +134,10 @@ int game_update() {
 		case 'b': buying_upgrade = !buying_upgrade; RENDER(); break; //toggle buy upgrade
 		case 'l': opentab = 0; RENDER(); break; //logs tab
 		case 'u': opentab = 1; RENDER(); break; //upgrades tab
-
 		default: {
 			int n = input - '1';
-			if (n > ROW_AMOUNT - 1) break; //is number basically
-			if (n == -1) n = 9;
-			printf("%d", n);
+			if (n > 8) return; //is number basically (9 is -1 (8))
+			if (n == -1) n = 9; // 0 key = 10 (-1)
 
 			if (buying_upgrade) {
 				buy_upgrade(n);

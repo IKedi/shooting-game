@@ -138,13 +138,13 @@ struct Enemy* create_enemy(int row) {
 
 void hurt_enemy(struct Enemy* enemy) {
 	if (enemy == NULL) return;
-	enemy->health -= PLAYER_DAMAGE;
+	enemy->health -= player->damage;
 
 	if (enemy->health <= 0) {
 		obliterate_enemy(enemy);
 		return;
 	}
-	create_log("You hit an enemy for %d damage", PLAYER_DAMAGE);
+	create_log("You hit an enemy for %d damage", player->damage);
 }
 
 void buy_upgrade(enum PlayerUpgrades upgrade) {
@@ -166,24 +166,27 @@ void buy_upgrade(enum PlayerUpgrades upgrade) {
 		break;
 	case Health:
 		player->health_level += 1;
+		float change = (float)player->health / player->max_health;
+
+		player->max_health = PLAYER_HEALTH * player->health_level;
+		player->health = (int)(player->max_health * change); //health stays relative to new max health
 		upgrade_name = "health upgrade";
 		break;
 	case Damage:
 		player->damage_level += 1;
+		player->damage = PLAYER_DAMAGE + (PLAYER_DAMAGE_UPGRADE_MULTIPLIER * player->damage_level);
 		upgrade_name = "damage upgrade";
 		break;
 	}
 
 	create_log("You purchase %s for %d!", upgrade_name, cost);
-	player->damage = PLAYER_DAMAGE * player->damage_level;
-	player->max_health = PLAYER_HEALTH * player->health_level;
 }
 int get_upgrade_cost(enum PlayerUpgrades upgrade) 
 {
 	if (player) {
 		switch (upgrade) {
 		case Heal: //based on how much health player has lost.
-			return (player->max_health - player->health) * 10; break;
+			return (player->max_health - player->health) * 5; break;
 		case Health:
 			return player->health_level * 100; break;
 		case Damage:
